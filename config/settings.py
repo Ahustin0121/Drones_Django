@@ -131,12 +131,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# En producción, WhiteNoise comprime y versiona los estáticos.
+# En producción, WhiteNoise comprime los estáticos sin exigir manifiesto estricto.
 if not DEBUG:
     STORAGES = {
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"
         },
     }
 else:
@@ -163,29 +163,4 @@ SESSION_SAVE_EVERY_REQUEST = True
 # --------------------------------------------------------------------------
 R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "").strip()
 R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID", "").strip()
-R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "").strip()
-R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "").strip()
-R2_PRESIGN_EXPIRES = int(os.getenv("R2_PRESIGN_EXPIRES", "3600"))
-R2_VIDEO_RETENTION_DAYS = int(os.getenv("R2_VIDEO_RETENTION_DAYS", "60"))
-
-# Límite de seguridad para la subida local de respaldo (bytes).
-VIDEO_LOCAL_MAX_BYTES = int(os.getenv("VIDEO_LOCAL_MAX_BYTES", str(1024 * 1024 * 1024)))
-
-# --------------------------------------------------------------------------
-# Seguridad en producción
-# --------------------------------------------------------------------------
-if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000"))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = "DENY"
-
-# Copia de respaldo de videos en el servidor mientras no exista R2.
-# Se recomienda configurar R2 antes de operar en producción.
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
-DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "").
