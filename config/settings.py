@@ -163,4 +163,4 @@ SESSION_SAVE_EVERY_REQUEST = True
 # --------------------------------------------------------------------------
 R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "").strip()
 R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID", "").strip()
-R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "").
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "").strip()
