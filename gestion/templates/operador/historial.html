@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Mis turnos{% endblock %}
+{% block page_eyebrow %}Historial operativo{% endblock %}
+{% block page_title %}Mis turnos{% endblock %}
+
+{% block content %}
+<div class="animar-aparicion space-y-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-400">Registro personal</p>
+            <h2 class="mt-1.5 font-display text-2xl font-bold tracking-tight text-white">Historial de turnos</h2>
+            <p class="mt-1 text-sm text-slate-500">Consulta tus jornadas, los vuelos realizados y el estado de sus videos.</p>
+        </div>
+        <a href="{% url 'gestion:operador_dashboard' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-400 px-4 py-2.5 text-xs font-bold text-slate-950 transition hover:from-cyan-300 hover:to-teal-300">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Ir al turno actual
+        </a>
+    </div>
+
+    {% if turnos %}
+        <div class="overflow-hidden rounded-2xl border border-white/[0.06] bg-slate-900/40">
+            <div class="hidden overflow-x-auto md:block tabla-scroll">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.02] text-[10px] uppercase tracking-[0.12em] text-slate-500">
+                            <th class="px-5 py-3.5 font-semibold">Turno</th>
+                            <th class="px-5 py-3.5 font-semibold">Condominio</th>
+                            <th class="px-5 py-3.5 font-semibold">Duración</th>
+                            <th class="px-5 py-3.5 font-semibold">Vuelos</th>
+                            <th class="px-5 py-3.5 font-semibold">Videos</th>
+                            <th class="px-5 py-3.5 font-semibold">Estado</th>
+                            <th class="px-5 py-3.5 text-right font-semibold">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/[0.05]">
+                        {% for turno in turnos %}
+                            <tr class="transition hover:bg-white/[0.02]">
+                                <td class="px-5 py-4">
+                                    <p class="font-semibold text-slate-200">{{ turno.fecha_inicio|date:"d/m/Y" }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-500">{{ turno.fecha_inicio|date:"H:i" }} hrs · #{{ turno.pk }}</p>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <p class="font-medium text-slate-300">{{ turno.condominio.nombre }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-500">{{ turno.condominio.comuna_ciudad|default:"—" }}</p>
+                                </td>
+                                <td class="px-5 py-4 text-slate-400">{{ turno.duracion_horas }} h</td>
+                                <td class="px-5 py-4">
+                                    <span class="font-semibold text-slate-200">{{ turno.total_vuelos }}</span>
+                                    {% if turno.vuelos_abiertos %}<span class="ml-1 text-[9px] text-amber-300">en curso</span>{% endif %}
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-medium text-slate-400">{{ turno.videos_subidos }}/{{ turno.total_vuelos }}</span>
+                                        {% if turno.total_vuelos %}
+                                            <div class="h-1 w-14 overflow-hidden rounded-full bg-white/[0.07]">
+                                                <div class="h-full rounded-full bg-cyan-400" style="width: {% widthratio turno.videos_subidos turno.total_vuelos 100 %}%"></div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    {% if turno.cerrado %}
+                                        <span class="inline-flex items-center gap-1 rounded-md bg-emerald-400/10 px-2 py-1 text-[9px] font-semibold text-emerald-300"><span class="h-1 w-1 rounded-full bg-emerald-400"></span> Cerrado</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1 rounded-md bg-amber-400/10 px-2 py-1 text-[9px] font-semibold text-amber-300"><span class="h-1 w-1 animate-pulse rounded-full bg-amber-400"></span> Activo</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-5 py-4 text-right">
+                                    <a href="{% url 'gestion:turno_detalle' turno.pk %}" class="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 transition hover:border-cyan-400/30 hover:text-cyan-300">
+                                        Ver detalle
+                                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Vista móvil -->
+            <div class="divide-y divide-white/[0.05] md:hidden">
+                {% for turno in turnos %}
+                    <a href="{% url 'gestion:turno_detalle' turno.pk %}" class="block px-5 py-4 transition hover:bg-white/[0.02]">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-semibold text-white">{{ turno.condominio.nombre }}</p>
+                                <p class="mt-1 text-[11px] text-slate-500">{{ turno.fecha_inicio|date:"d/m/Y · H:i" }} hrs · {{ turno.duracion_horas }} h</p>
+                            </div>
+                            {% if turno.cerrado %}
+                                <span class="rounded-md bg-emerald-400/10 px-2 py-1 text-[9px] font-semibold text-emerald-300">Cerrado</span>
+                            {% else %}
+                                <span class="rounded-md bg-amber-400/10 px-2 py-1 text-[9px] font-semibold text-amber-300">Activo</span>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2 flex items-center gap-3 text-[10px] text-slate-500">
+                            <span>{{ turno.total_vuelos }} vuelos</span>
+                            <span>·</span>
+                            <span>{{ turno.videos_subidos }} con video</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="flex items-center justify-between">
+                <p class="text-[11px] text-slate-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</p>
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] font-semibold text-slate-300 transition hover:bg-white/[0.06]">Anterior</a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] font-semibold text-slate-300 transition hover:bg-white/[0.06]">Siguiente</a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="rounded-3xl border border-white/[0.06] bg-slate-900/40 px-6 py-16 text-center">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-slate-600">
+                <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke-width="1.4" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+            </div>
+            <h3 class="mt-4 text-sm font-semibold text-slate-300">Todavía no tienes turnos</h3>
+            <p class="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-600">Cuando inicies tu primera jornada de vigilancia, aparecerá aquí con todo su detalle.</p>
+            <a href="{% url 'gestion:operador_dashboard' %}" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-cyan-400/10 px-4 py-2.5 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20">Abrir mi primer turno</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

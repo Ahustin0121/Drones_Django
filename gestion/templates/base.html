@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="h-full scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AeroVigía — Sistema de gestión de vigilancia con drones.">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Panel{% endblock %} · {{ APP_NAME }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+    <script src="{% static 'js/app.js' %}"></script>
+</head>
+<body class="min-h-full bg-slate-950 font-sans text-slate-100 antialiased selection:bg-cyan-400/30"
+      x-data="{ sidebar: false }">
+
+<!-- ===================== SIDEBAR ESCRITORIO ===================== -->
+<aside class="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col border-r border-white/[0.06] bg-[#060b14] lg:flex">
+    {% include "partials/_sidebar.html" %}
+</aside>
+
+<!-- ===================== SIDEBAR MÓVIL ===================== -->
+<div x-cloak x-show="sidebar" class="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+         x-transition.opacity @click="sidebar = false"></div>
+    <aside class="absolute inset-y-0 left-0 flex w-[min(19rem,88vw)] flex-col border-r border-white/10 bg-[#060b14] shadow-2xl"
+           x-transition:enter="transition ease-out duration-200"
+           x-transition:enter-start="-translate-x-full"
+           x-transition:enter-end="translate-x-0"
+           x-transition:leave="transition ease-in duration-150"
+           x-transition:leave-start="translate-x-0"
+           x-transition:leave-end="-translate-x-full">
+        {% include "partials/_sidebar.html" with movil=True %}
+    </aside>
+</div>
+
+<!-- ===================== CONTENIDO ===================== -->
+<div class="flex min-h-screen flex-col lg:pl-72">
+    <header class="sticky top-0 z-30 border-b border-white/[0.06] bg-slate-950/80 backdrop-blur-xl">
+        <div class="flex h-[4.5rem] items-center gap-4 px-4 sm:px-6 lg:px-8">
+            <button type="button" @click="sidebar = true"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-300 transition hover:bg-white/[0.07] lg:hidden">
+                <span class="sr-only">Abrir menú</span>
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                </svg>
+            </button>
+
+            <div class="min-w-0 flex-1">
+                <p class="hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-400/80 sm:block">
+                    {% block page_eyebrow %}Centro de operaciones{% endblock %}
+                </p>
+                <h1 class="truncate font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
+                    {% block page_title %}Panel{% endblock %}
+                </h1>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="hidden text-right md:block">
+                    <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500">Hoy</p>
+                    <p class="text-xs font-medium text-slate-300">{{ APP_HOY|date:"l, d M Y" }}</p>
+                </div>
+                <div class="h-8 w-px bg-white/[0.08]"></div>
+                {% if request.user.es_admin %}
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold text-cyan-300">
+                        <span class="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+                        Administrador
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold text-emerald-300">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                        Operador
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div class="mx-auto w-full max-w-7xl">
+            {% if messages %}
+                <div class="mb-6 space-y-2.5" aria-live="polite">
+                    {% for message in messages %}
+                        <div class="js-mensaje flex items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg
+                            {% if message.tags == 'success' %}border-emerald-400/20 bg-emerald-500/10 text-emerald-200
+                            {% elif message.tags == 'error' %}border-rose-400/20 bg-rose-500/10 text-rose-200
+                            {% elif message.tags == 'warning' %}border-amber-400/20 bg-amber-500/10 text-amber-200
+                            {% else %}border-sky-400/20 bg-sky-500/10 text-sky-200{% endif %}">
+                            <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                {% if message.tags == 'success' %}
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                {% elif message.tags == 'error' %}
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                {% else %}
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
+                                {% endif %}
+                            </svg>
+                            <p class="flex-1">{{ message }}</p>
+                            <button type="button" class="js-cerrar-mensaje -m-1 rounded-lg p-1 text-current/60 transition hover:bg-white/10 hover:text-current">
+                                <span class="sr-only">Cerrar</span>
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+
+            <footer class="mt-12 flex flex-col gap-2 border-t border-white/[0.05] py-6 text-[11px] text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+                <p>{{ APP_NAME }} · Sistema de gestión de vigilancia con drones</p>
+                <p>Retención de video: 60 días · MVP</p>
+            </footer>
+        </div>
+    </main>
+</div>
+
+<!-- ===================== VISOR DE VIDEO ===================== -->
+<dialog id="video-dialog"
+        class="w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-slate-900 p-0 text-slate-100 shadow-2xl backdrop:bg-slate-950/80 backdrop:backdrop-blur-sm">
+    <div class="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-3.5">
+        <div class="min-w-0">
+            <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-400">Reproducción</p>
+            <h2 id="video-dialog-title" class="truncate font-display text-sm font-semibold text-white">Video del vuelo</h2>
+        </div>
+        <button type="button" data-cerrar-video
+                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:bg-white/10 hover:text-white">
+            <span class="sr-only">Cerrar visor</span>
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="bg-black">
+        <video id="video-player" class="aspect-video w-full" controls playsinline preload="metadata"></video>
+    </div>
+    <div class="flex items-center justify-between gap-4 px-5 py-3 text-[11px] text-slate-500">
+        <p>El enlace de reproducción es temporal y privado.</p>
+        <p class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-cyan-400"></span> {% if R2_CONFIGURADO %}Cloudflare R2{% else %}Almacenamiento local{% endif %}</p>
+    </div>
+</dialog>
+
+<script>
+    window.CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

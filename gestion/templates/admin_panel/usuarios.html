@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Usuarios y roles{% endblock %}
+{% block page_eyebrow %}Administración de accesos{% endblock %}
+{% block page_title %}Usuarios y roles{% endblock %}
+
+{% block content %}
+<div class="animar-aparicion space-y-5">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-400">Control de acceso</p>
+            <h2 class="mt-1.5 font-display text-2xl font-bold tracking-tight text-white">Usuarios y roles</h2>
+            <p class="mt-1 max-w-2xl text-sm text-slate-500">Crea cuentas de operadores y administradores, restablece contraseñas y controla el acceso.</p>
+        </div>
+        <a href="{% url 'gestion:usuario_crear' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-400 px-4 py-2.5 text-xs font-bold text-slate-950 transition hover:from-cyan-300 hover:to-teal-300">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Nuevo usuario
+        </a>
+    </div>
+
+    <form method="get" class="grid gap-2 rounded-2xl border border-white/[0.06] bg-slate-900/40 p-3 sm:grid-cols-[1fr_12rem_auto]">
+        <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-600">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+            </span>
+            <input type="search" name="q" value="{{ busqueda }}" placeholder="Buscar por nombre, usuario o correo…"
+                   class="w-full rounded-xl border border-white/10 bg-slate-950/40 py-2.5 pl-10 pr-3 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/15">
+        </div>
+        <select name="rol" class="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-xs text-slate-300 focus:border-cyan-400/50 focus:outline-none">
+            <option value="">Todos los roles</option>
+            {% for valor, etiqueta in roles %}
+                <option value="{{ valor }}" {% if rol_sel == valor %}selected{% endif %}>{{ etiqueta }}</option>
+            {% endfor %}
+        </select>
+        <div class="flex gap-2">
+            <button type="submit" class="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-slate-300 transition hover:bg-white/[0.08]">Filtrar</button>
+            {% if busqueda or rol_sel %}<a href="{% url 'gestion:usuarios' %}" class="rounded-xl px-3 py-2.5 text-xs text-slate-500 transition hover:text-slate-300">Limpiar</a>{% endif %}
+        </div>
+    </form>
+
+    <div class="overflow-hidden rounded-2xl border border-white/[0.06] bg-slate-900/40">
+        {% if usuarios %}
+            <div class="overflow-x-auto tabla-scroll">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.02] text-[10px] uppercase tracking-[0.1em] text-slate-500">
+                            <th class="px-5 py-3.5 font-semibold">Usuario</th>
+                            <th class="px-5 py-3.5 font-semibold">Rol</th>
+                            <th class="px-5 py-3.5 font-semibold">Contacto</th>
+                            <th class="px-5 py-3.5 font-semibold">Turnos</th>
+                            <th class="px-5 py-3.5 font-semibold">Estado</th>
+                            <th class="px-5 py-3.5 text-right font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/[0.05]">
+                        {% for usuario in usuarios %}
+                            <tr class="transition hover:bg-white/[0.02]">
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-[10px] font-bold text-white ring-1 ring-white/10">
+                                            {{ usuario.first_name|default:usuario.username|slice:":1" }}{{ usuario.last_name|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-200">{{ usuario.nombre_completo }}{% if usuario.pk == request.user.pk %}<span class="ml-1.5 text-[9px] font-medium text-cyan-400">(tú)</span>{% endif %}</p>
+                                            <p class="mt-0.5 font-mono text-[10px] text-slate-600">@{{ usuario.username }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    {% if usuario.rol == 'ADMIN' %}
+                                        <span class="inline-flex items-center gap-1 rounded-md border border-cyan-400/15 bg-cyan-400/[0.07] px-2 py-1 text-[9px] font-semibold text-cyan-300">Administrador</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1 rounded-md border border-emerald-400/15 bg-emerald-400/[0.07] px-2 py-1 text-[9px] font-semibold text-emerald-300">Operador</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-5 py-4">
+                                    <p class="text-[11px] text-slate-400">{{ usuario.email|default:"Sin correo" }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-600">{{ usuario.telefono|default:usuario.rut_o_dni|default:"—" }}</p>
+                                </td>
+                                <td class="px-5 py-4 text-slate-400">{{ usuario.total_turnos }}</td>
+                                <td class="px-5 py-4">
+                                    {% if usuario.is_active %}
+                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-emerald-400/10 px-2 py-1 text-[9px] font-semibold text-emerald-300"><span class="h-1 w-1 rounded-full bg-emerald-400"></span> Activo</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-slate-500/10 px-2 py-1 text-[9px] font-semibold text-slate-400"><span class="h-1 w-1 rounded-full bg-slate-500"></span> Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{% url 'gestion:usuario_editar' usuario.pk %}" title="Editar usuario"
+                                           class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300">
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+                                        </a>
+                                        <a href="{% url 'gestion:usuario_password' usuario.pk %}" title="Restablecer contraseña"
+                                           class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:border-amber-400/30 hover:text-amber-300">
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"/></svg>
+                                        </a>
+                                        {% if usuario.pk != request.user.pk %}
+                                            <form method="post" action="{% url 'gestion:usuario_toggle' usuario.pk %}" data-confirm="¿{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %} la cuenta de {{ usuario.nombre_completo }}?">
+                                                {% csrf_token %}
+                                                <button type="submit" title="{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}"
+                                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 transition {% if usuario.is_active %}text-slate-400 hover:border-rose-400/30 hover:text-rose-300{% else %}text-slate-400 hover:border-emerald-400/30 hover:text-emerald-300{% endif %}">
+                                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                        {% if usuario.is_active %}<path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/>
+                                                        {% else %}<path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 12.728A9 9 0 0 0 5.636 5.636Zm0 0L19.5 19.5"/>{% endif %}
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="px-6 py-14 text-center">
+                <p class="text-sm font-medium text-slate-400">No se encontraron usuarios.</p>
+                <a href="{% url 'gestion:usuario_crear' %}" class="mt-4 inline-flex items-center gap-2 rounded-xl bg-cyan-400/10 px-4 py-2.5 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20">Crear usuario</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

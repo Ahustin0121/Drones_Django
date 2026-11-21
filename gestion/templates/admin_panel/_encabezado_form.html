@@ -1,0 +1,8 @@
+<div class="mb-6">
+    <a href="{{ cancelar_url }}" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 transition hover:text-slate-300">
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Volver a {{ seccion }}
+    </a>
+    <h2 class="mt-2 font-display text-2xl font-bold tracking-tight text-white">{{ titulo }}</h2>
+    {% if subtitulo %}<p class="mt-1 text-sm text-slate-500">{{ subtitulo }}</p>{% endif %}
+</div>

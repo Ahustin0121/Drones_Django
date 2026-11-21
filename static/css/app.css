@@ -1,0 +1,114 @@
+/* AeroVigía · estilos complementarios al CDN de Tailwind */
+[x-cloak] {
+    display: none !important;
+}
+
+html {
+    color-scheme: dark;
+}
+
+body {
+    background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.09), transparent),
+        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(20, 184, 166, 0.05), transparent);
+    background-attachment: fixed;
+}
+
+::selection {
+    background: rgba(34, 211, 238, 0.3);
+}
+
+/* Scrollbars */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
+}
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.28);
+    border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.45);
+}
+
+/* Patrón de rejilla del login */
+.login-grid {
+    background-image:
+        linear-gradient(rgba(148, 163, 184, 0.075) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.075) 1px, transparent 1px);
+    background-size: 52px 52px;
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 20%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 20%, transparent 78%);
+}
+
+/* Acordeones nativos */
+details > summary {
+    list-style: none;
+    cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+    display: none;
+}
+details[open] .chevron-detalle {
+    transform: rotate(180deg);
+}
+
+/* Apariciones suaves */
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animar-aparicion {
+    animation: aparecer 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.retardo-1 { animation-delay: 0.05s; }
+.retardo-2 { animation-delay: 0.1s; }
+.retardo-3 { animation-delay: 0.15s; }
+
+/* Inputs de archivo */
+input[type="file"]::file-selector-button {
+    cursor: pointer;
+}
+
+/* Tablas */
+.tabla-scroll {
+    scrollbar-gutter: stable;
+}
+
+/* Diálogo */
+dialog::backdrop {
+    animation: aparecer 0.2s ease-out;
+}
+
+/* Impresión de bitácora */
+@media print {
+    aside, header, footer, .no-imprimir {
+        display: none !important;
+    }
+    body {
+        background: #fff !important;
+        color: #0f172a !important;
+    }
+    main, .lg\:pl-72 {
+        padding-left: 0 !important;
+    }
+    .print-card {
+        border: 1px solid #e2e8f0 !important;
+        background: #fff !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+    }
+}

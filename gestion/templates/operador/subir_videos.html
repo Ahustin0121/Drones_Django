@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Subir videos{% endblock %}
+{% block page_eyebrow %}Cierre de jornada{% endblock %}
+{% block page_title %}Subir videos del turno{% endblock %}
+
+{% block content %}
+<div class="animar-aparicion space-y-6">
+
+    <!-- Encabezado / resumen -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <a href="{% url 'gestion:turno_detalle' turno.pk %}" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 transition hover:text-slate-300">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+                Volver al detalle del turno
+            </a>
+            <h2 class="mt-2 font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">Videos de la jornada</h2>
+            <p class="mt-1 max-w-2xl text-sm text-slate-500">
+                Asocia un archivo a cada vuelo. El navegador comprime el video a 720p antes de enviarlo, para ahorrar datos y tiempo.
+            </p>
+        </div>
+    </div>
+
+    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
+            <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Condominio</p>
+            <p class="mt-1 truncate text-sm font-semibold text-white">{{ turno.condominio.nombre }}</p>
+        </div>
+        <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
+            <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Fecha del turno</p>
+            <p class="mt-1 text-sm font-semibold text-white">{{ turno.fecha_inicio|date:"d/m/Y · H:i" }} hrs</p>
+        </div>
+        <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
+            <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Vuelos registrados</p>
+            <p class="mt-1 text-sm font-semibold text-white">{{ vuelos|length }}</p>
+        </div>
+        <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
+            <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Videos cargados</p>
+            <p class="mt-1 text-sm font-semibold {% if total_disponibles == vuelos|length and vuelos %}text-emerald-300{% else %}text-white{% endif %}">
+                {{ total_disponibles }} <span class="text-xs font-normal text-slate-600">/ {{ vuelos|length }}</span>
+            </p>
+        </div>
+    </section>
+
+    {% if total_pendientes %}
+        <div class="flex items-start gap-3 rounded-2xl border border-cyan-400/15 bg-cyan-400/[0.05] px-4 py-3.5">
+            <svg class="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+            <div class="text-xs leading-relaxed text-cyan-100/70">
+                <p><span class="font-semibold text-cyan-200">{{ total_pendientes }} vuelo(s)</span> aún no tienen un video disponible.</p>
+                {% if r2_configurado %}
+                    <p class="mt-0.5">Los archivos se subirán directamente a Cloudflare R2 con URLs firmadas; Django no procesa los binarios.</p>
+                {% else %}
+                    <p class="mt-0.5">Modo local de desarrollo: los videos se guardarán en el servidor. Configura R2 en <code class="rounded bg-white/10 px-1 py-0.5 text-[10px]">.env</code> para producción.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if not vuelos %}
+        <div class="rounded-3xl border border-white/[0.06] bg-slate-900/40 p-12 text-center">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-slate-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+            </div>
+            <p class="mt-4 text-sm font-medium text-slate-300">Este turno no tiene vuelos completados</p>
+            <p class="mt-1 text-xs text-slate-600">No hay videos que subir. Puedes volver a tu panel.</p>
+            <a href="{% url 'gestion:operador_dashboard' %}" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-white/[0.06] px-4 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10">Volver al panel</a>
+        </div>
+    {% else %}
+        <div id="upload-app"
+             data-presigned-url="{% url 'gestion:api_presigned_uploads' turno.pk %}"
+             data-csrf="{{ csrf_token }}"
+             data-ffmpeg-script="{% static 'js/ffmpeg/ffmpeg.js' %}"
+             data-total="{{ vuelos|length }}">
+
+            <div class="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+                <!-- Lista de vuelos -->
+                <section class="rounded-2xl border border-white/[0.06] bg-slate-900/50">
+                    <div class="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+                        <div>
+                            <h3 class="font-display text-sm font-semibold text-white">Archivos por vuelo</h3>
+                            <p class="mt-0.5 text-[11px] text-slate-500">Formatos admitidos: MP4, MOV, M4V, WebM o MKV.</p>
+                        </div>
+                        <span class="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] font-semibold text-slate-400">{{ vuelos|length }} vuelos</span>
+                    </div>
+                    <div class="divide-y divide-white/[0.05]">
+                        {% for vuelo in vuelos %}
+                            <div class="fila-vuelo px-5 py-4" data-vuelo-id="{{ vuelo.pk }}" data-confirm-url="{% url 'gestion:api_confirmar_video' vuelo.pk %}" data-numero="{{ forloop.counter }}">
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                    <div class="flex min-w-0 flex-1 items-center gap-3">
+                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.02] font-mono text-[11px] font-semibold text-cyan-300">{{ forloop.counter }}</div>
+                                        <div class="min-w-0">
+                                            <p class="truncate text-sm font-semibold text-white">{{ vuelo.dron.codigo_identificador }} <span class="font-normal text-slate-500">· {{ vuelo.dron.marca.nombre }}</span></p>
+                                            <p class="mt-0.5 text-[11px] text-slate-500">
+                                                {{ vuelo.hora_inicio|date:"H:i" }} – {{ vuelo.hora_fin|date:"H:i" }}
+                                                {% if vuelo.duracion_minutos %} · {{ vuelo.duracion_minutos }} min{% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex w-full shrink-0 flex-col gap-2 sm:w-[15rem]">
+                                        {% if vuelo.video_disponible %}
+                                            <div class="flex items-center justify-between gap-2 rounded-lg border border-emerald-400/15 bg-emerald-400/[0.06] px-2.5 py-1.5">
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
+                                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                    Video cargado
+                                                </span>
+                                                <span class="text-[9px] text-emerald-200/50">{{ vuelo.video_peso_mb|floatformat:1 }} MB</span>
+                                            </div>
+                                        {% elif vuelo.video_expirado %}
+                                            <div class="rounded-lg border border-amber-400/15 bg-amber-400/[0.05] px-2.5 py-1.5 text-[10px] font-medium text-amber-300">
+                                                Video expirado (&gt;60 días)
+                                            </div>
+                                        {% endif %}
+                                        <label class="group flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-white/15 bg-slate-950/30 px-2.5 py-2 text-[10px] text-slate-500 transition hover:border-cyan-400/40 hover:text-cyan-300">
+                                            <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"/></svg>
+                                            <span class="archivo-etiqueta truncate">Seleccionar video…</span>
+                                            <input type="file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,video/*" class="sr-only archivo-vuelo">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="estado-vuelo mt-2 hidden text-[10px] text-slate-500 sm:ml-12"></div>
+                                <div class="barra-vuelo mt-1.5 hidden h-1 overflow-hidden rounded-full bg-white/[0.06] sm:ml-12">
+                                    <div class="relleno-vuelo h-full w-0 rounded-full bg-gradient-to-r from-cyan-400 to-teal-400 transition-all duration-300"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <!-- Panel de subida -->
+                <aside class="lg:sticky lg:top-24 lg:self-start">
+                    <div class="rounded-2xl border border-white/[0.07] bg-gradient-to-b from-slate-900 to-slate-900/60 p-5">
+                        <h3 class="font-display text-sm font-semibold text-white">Preparar carga</h3>
+                        <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
+                            Puedes seleccionar varios archivos. Se comprimirán y subirán uno a uno en lotes paralelos de 3.
+                        </p>
+
+                        <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-3">
+                            <input type="checkbox" id="comprimir" checked
+                                   class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-400/40">
+                            <span>
+                                <span class="block text-xs font-semibold text-slate-200">Comprimir a 720p</span>
+                                <span class="mt-0.5 block text-[10px] leading-relaxed text-slate-500">H.264, ~1.2 Mbps. Reduce hasta 90 % el tamaño original. Requiere ffmpeg.wasm en el navegador.</span>
+                            </span>
+                        </label>
+
+                        <div class="mt-4 rounded-xl border border-white/[0.05] bg-slate-950/40 p-3.5">
+                            <div class="flex items-center justify-between text-[10px]">
+                                <span class="font-semibold uppercase tracking-[0.12em] text-slate-500">Progreso total</span>
+                                <span id="progreso-texto" class="font-mono text-slate-400">0 / {{ vuelos|length }}</span>
+                            </div>
+                            <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                                <div id="progreso-total" class="h-full w-0 rounded-full bg-gradient-to-r from-cyan-400 to-teal-400 transition-all duration-500"></div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btn-subir"
+                                class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-400 px-4 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-500/10 transition hover:from-cyan-300 hover:to-teal-300 disabled:cursor-not-allowed disabled:opacity-50">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                            Comprimir y subir videos
+                        </button>
+
+                        <div id="resultado-global" class="mt-3 hidden rounded-xl border px-3.5 py-3 text-[11px] leading-relaxed"></div>
+
+                        <div class="mt-4 border-t border-white/[0.06] pt-3">
+                            <p class="flex items-center gap-1.5 text-[10px] text-slate-600">
+                                <svg class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 12.75v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                                Los videos se eliminan automáticamente a los 60 días.
+                            </p>
+                            <a href="{% url 'gestion:turno_detalle' turno.pk %}" class="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-cyan-400 transition hover:text-cyan-300">
+                                Omitir por ahora y ver el turno
+                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.015] px-4 py-3 text-[10px] leading-relaxed text-slate-600">
+                        <p class="font-semibold text-slate-500">Recomendaciones</p>
+                        <ul class="mt-1 list-inside list-disc space-y-0.5">
+                            <li>Mantén esta pestaña abierta durante la subida.</li>
+                            <li>Usa una conexión Wi-Fi estable.</li>
+                            <li>El primer archivo tarda más: se descarga el compresor.</li>
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {% if vuelos %}
+        <script src="{% static 'js/upload_videos.js' %}"></script>
+    {% endif %}
+{% endblock %}

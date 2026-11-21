@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Marcas de drones{% endblock %}
+{% block page_eyebrow %}Administración de catálogos{% endblock %}
+{% block page_title %}Marcas de drones{% endblock %}
+
+{% block content %}
+<div class="animar-aparicion space-y-5">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-400">Catálogo de fabricantes</p>
+            <h2 class="mt-1.5 font-display text-2xl font-bold tracking-tight text-white">Marcas de drones</h2>
+            <p class="mt-1 max-w-2xl text-sm text-slate-500">Agrega nuevas marcas sin tocar código. Cada dron de la flota queda asociado a una marca.</p>
+        </div>
+        <a href="{% url 'gestion:marca_crear' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-teal-400 px-4 py-2.5 text-xs font-bold text-slate-950 transition hover:from-cyan-300 hover:to-teal-300">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Nueva marca
+        </a>
+    </div>
+
+    {% if marcas %}
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {% for marca in marcas %}
+                <article class="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-slate-900/45 p-5 transition hover:border-cyan-400/20">
+                    <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-cyan-400/[0.03] transition group-hover:bg-cyan-400/[0.06]"></div>
+                    <div class="relative flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] font-display text-sm font-bold uppercase text-cyan-300">
+                                {{ marca.nombre|slice:":2" }}
+                            </div>
+                            <div>
+                                <h3 class="font-display text-sm font-bold text-white">{{ marca.nombre }}</h3>
+                                <p class="mt-0.5 text-[10px] text-slate-500">{{ marca.total_drones }} dron(es) asociados</p>
+                            </div>
+                        </div>
+                        {% if marca.activa %}
+                            <span class="inline-flex items-center gap-1 rounded-md bg-emerald-400/10 px-2 py-1 text-[9px] font-semibold text-emerald-300"><span class="h-1 w-1 rounded-full bg-emerald-400"></span> Activa</span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1 rounded-md bg-slate-500/10 px-2 py-1 text-[9px] font-semibold text-slate-400"><span class="h-1 w-1 rounded-full bg-slate-500"></span> Inactiva</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="relative mt-5 flex items-center gap-2 border-t border-white/[0.05] pt-4">
+                        <a href="{% url 'gestion:marca_editar' marca.pk %}" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[10px] font-semibold text-slate-300 transition hover:bg-white/[0.07]">
+                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+                            Editar
+                        </a>
+                        <form method="post" action="{% url 'gestion:marca_toggle' marca.pk %}" data-confirm="¿{% if marca.activa %}Desactivar{% else %}Activar{% endif %} la marca «{{ marca.nombre }}»?">
+                            {% csrf_token %}
+                            <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-[10px] font-semibold transition {% if marca.activa %}text-slate-400 hover:border-rose-400/30 hover:text-rose-300{% else %}text-slate-400 hover:border-emerald-400/30 hover:text-emerald-300{% endif %}">
+                                {% if marca.activa %}Desactivar{% else %}Activar{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        <div class="rounded-xl border border-white/[0.05] bg-white/[0.015] px-4 py-3 text-[10px] leading-relaxed text-slate-600">
+            <span class="font-semibold text-slate-500">Nota:</span> al desactivar una marca, sus drones dejan de ofrecerse para nuevos vuelos, pero el historial y la bitácora se mantienen intactos. Puedes reactivarla cuando quieras.
+        </div>
+    {% else %}
+        <div class="rounded-3xl border border-white/[0.06] bg-slate-900/40 px-6 py-16 text-center">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-slate-600">
+                <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke-width="1.4" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/></svg>
+            </div>
+            <h3 class="mt-4 text-sm font-semibold text-slate-300">Aún no hay marcas en el catálogo</h3>
+            <p class="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-600">Crea la primera marca (por ejemplo DJI, Autel o Parrot) para comenzar a registrar drones.</p>
+            <a href="{% url 'gestion:marca_crear' %}" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-cyan-400/10 px-4 py-2.5 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20">Crear primera marca</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

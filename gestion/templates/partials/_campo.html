@@ -1,0 +1,16 @@
+<div>
+    <label for="{{ campo.id_for_label }}" class="mb-1.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+        {{ campo.label }}
+        {% if campo.field.required %}<span class="text-cyan-400">*</span>{% endif %}
+    </label>
+    {{ campo }}
+    {% if campo.help_text %}
+        <p class="mt-1.5 text-[11px] leading-relaxed text-slate-500">{{ campo.help_text }}</p>
+    {% endif %}
+    {% for error in campo.errors %}
+        <p class="mt-1.5 flex items-center gap-1 text-[11px] text-rose-300">
+            <svg class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+            {{ error }}
+        </p>
+    {% endfor %}
+</div>
