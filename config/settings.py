@@ -1,12 +1,5 @@
-"""
-Configuración de AeroVigía — Sistema de gestión de vigilancia con drones.
-
-Desarrollo local: usa SQLite y almacenamiento local de videos si no hay
-variables de Cloudflare R2 configuradas.
-Producción: DATABASE_URL (PostgreSQL) + credenciales de Cloudflare R2.
-"""
-from pathlib import Path
 import os
+from pathlib import Path
 
 import dj_database_url
 from dotenv import load_dotenv
@@ -28,7 +21,7 @@ SECRET_KEY = os.getenv(
     "SECRET_KEY",
     "django-insecure-solo-para-desarrollo-local-cambiar-en-produccion",
 )
-DEBUG = env_bool("DEBUG", True)
+DEBUG = env_bool("DEBUG", False)
 
 ALLOWED_HOSTS = [
     h.strip()
@@ -38,11 +31,19 @@ ALLOWED_HOSTS = [
     if h.strip()
 ]
 
+render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if render_hostname and render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_hostname)
+
 CSRF_TRUSTED_ORIGINS = [
     o.strip()
     for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
     if o.strip()
 ]
+if render_hostname:
+    render_origin = f"https://{render_hostname}"
+    if render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(render_origin)
 
 # --------------------------------------------------------------------------
 # Aplicaciones
@@ -124,7 +125,7 @@ USE_TZ = True
 # Archivos estáticos y media local
 # --------------------------------------------------------------------------
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
